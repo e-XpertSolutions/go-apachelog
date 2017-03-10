@@ -150,6 +150,44 @@ func parseRemoteHost(quoted bool, next stateFn) stateFn {
 	}
 }
 
+func parseRemoteLogname(quoted bool, next stateFn) stateFn {
+	return func(entry *AccessLogEntry, line string, pos int) error {
+		input := line[pos:] // narrow the input to the current position
+		newPos := pos
+
+		// handle quotes
+		var (
+			data string
+			off  int
+			err  error
+		)
+		if quoted {
+			data, off, err = readWithQuotes(input)
+			off++ // go after the "
+		} else {
+			data, off, err = readWithoutQuotes(input)
+		}
+		if err != nil {
+			return err
+		}
+		newPos += off
+		entry.RemoteLogname = data
+
+		// jump over next space, if any
+		if line[newPos] == ' ' {
+			newPos++
+		}
+
+		// If we reached the final \n character or that there is no further
+		// state, we do not call the next function.
+		if line[newPos] == '\n' || next == nil {
+			return nil
+		}
+
+		return next(entry, line, newPos)
+	}
+}
+
 // readWithQuotes extract the content of a quoted expression along with the
 // ending quote position.
 //

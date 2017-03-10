@@ -84,6 +84,42 @@ func TestParseRemoteHost(t *testing.T) {
 	}
 }
 
+func TestParseRemoteLogname(t *testing.T) {
+	type testCase struct {
+		quoted bool
+		line   string
+		err    error
+	}
+
+	testCases := []testCase{
+		{quoted: true, line: "\"foobar\" 42", err: nil},
+		{quoted: false, line: "foobar 42", err: nil},
+	}
+
+	for i, test := range testCases {
+		var entry AccessLogEntry
+		err := parseRemoteHost(test.quoted, nil)(&entry, test.line, 0)
+		switch {
+		case err == nil && test.err != nil:
+			t.Errorf("%d. parseRemoteHost(%v, nil)({}, %q, 0): expected error %q; got none",
+				i, test.quoted, test.line, test.err.Error())
+			continue
+		case err != nil && test.err == nil:
+			t.Errorf("%d. parseRemoteHost(%v, nil)({}, %q, 0): unexpected error %q",
+				i, test.quoted, test.line, test.err.Error())
+			continue
+		case err != nil && test.err != nil && err.Error() != test.err.Error():
+			t.Errorf("%d. parseRemoteHost(%v, nil)({}, %q, 0): expected error %q; got %q",
+				i, test.quoted, test.line, test.err.Error(), err.Error())
+			continue
+		}
+		if got := entry.RemoteHost; got != "foobar" {
+			t.Errorf("%d. parseRemoteHost(%v, nil)({}, %q, 0): expected RemoteHost %q, got %q",
+				i, test.quoted, test.line, "foobar", got)
+		}
+	}
+}
+
 func TestReadWithQuotes(t *testing.T) {
 	type testCase struct {
 		in, out string
