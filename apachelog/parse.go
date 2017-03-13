@@ -65,20 +65,20 @@ type Parser struct {
 	fn stateFn
 }
 
-// Combined creates a new parser that reads from r and that parses log entries
-// using the Apache Combined Log format.
-func Combined(r io.Reader) (*Parser, error) {
-	return Custom(r, CombinedLogFromat)
+// CombinedParser creates a new parser that reads from r and that parses log
+// entries using the Apache Combined Log format.
+func CombinedParser(r io.Reader) (*Parser, error) {
+	return CustomParser(r, CombinedLogFromat)
 }
 
-// Common creates a new parser that reads from r and that parses log entries
+// CommonParser creates a new parser that reads from r and that parses log entries
 // using the Apache Common Log format.
-func Common(r io.Reader) (*Parser, error) {
-	return Custom(r, CommonLogFormat)
+func CommonParser(r io.Reader) (*Parser, error) {
+	return CustomParser(r, CommonLogFormat)
 }
 
-// Custom creates a new parser that reads from r and that is capable of parsing
-// log entries having the given format.
+// CustomParser creates a new parser that reads from r and that is capable of
+// parsing log entries having the given format.
 //
 // The format is mostly the same as the one defined by the mod_log_config Apache
 // module:
@@ -86,7 +86,7 @@ func Common(r io.Reader) (*Parser, error) {
 //
 // However, unlike the Apache format, it does not support modifiers of any
 // kind (<, >, !, ...).
-func Custom(r io.Reader, format string) (*Parser, error) {
+func CustomParser(r io.Reader, format string) (*Parser, error) {
 	if r == nil {
 		return nil, errors.New("reader is nil")
 	}
