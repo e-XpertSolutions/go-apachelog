@@ -16,7 +16,7 @@ const (
 	CommonLogFormat   = "%h %l %u %t \"%r\" %s %b"
 )
 
-// Time layout for parsing %t format.
+// StandardEnglishFormat is the time layout to use for parsing %t format.
 const StandardEnglishFormat = "02/Jan/2006:15:04:05 -0700"
 
 // A stateFn extracts an information contained in "line" and starting from
@@ -60,6 +60,7 @@ func makeStateFn(expr []string) (stateFn, error) {
 	}
 }
 
+// A Parser for parsing Apaache access log files.
 type Parser struct {
 	br *bufio.Reader
 	fn stateFn
@@ -100,6 +101,8 @@ func CustomParser(r io.Reader, format string) (*Parser, error) {
 	}, nil
 }
 
+// Parse the next access log entry. If there is no more data to read and parse,
+// an io.EOF error is returned.
 func (p *Parser) Parse() (*AccessLogEntry, error) {
 	line, err := p.br.ReadString('\n')
 	if err != nil {

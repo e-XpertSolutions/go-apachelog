@@ -2,6 +2,7 @@ package apachelog
 
 import "time"
 
+// An AccessLogEntry represents a line of an access log.
 type AccessLogEntry struct {
 	RemoteIPAddress     string            // Remote IP address
 	LocalIPAddress      string            // Local IP address

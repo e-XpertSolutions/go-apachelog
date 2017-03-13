@@ -1,7 +1,14 @@
 package apachelog
 
+// Format supported by the Apache mod_log_config module.
+// For more information, see:
+//    https://httpd.apache.org/docs/2.2/fr/mod/mod_log_config.html#formats
 type Format int
 
+// Supported formats.
+//
+// TODO(gilliek): move complex format, such as COOKIE, at the bottom of the list
+// in order to treat them separately.
 const (
 	format_beg            Format = iota
 	REMOTE_IP_ADDRESS            // %a
@@ -75,6 +82,7 @@ func init() {
 	}
 }
 
+// LookupFormat retrieves the format corresponding to the given format string.
 func LookupFormat(format string) Format {
 	if f, found := formatsMapping[format]; found {
 		return f
