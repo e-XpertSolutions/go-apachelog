@@ -176,7 +176,7 @@ func TestReadDateTime(t *testing.T) {
 		{
 			in:  "[16/Nov/2016:09:25:05 +0100] foobar",
 			out: time.Date(2016, 11, 16, 9, 25, 5, 0, tz),
-			off: 27,
+			off: 28,
 			err: nil,
 		},
 		{
@@ -192,7 +192,7 @@ func TestReadDateTime(t *testing.T) {
 		{
 			in:  "[2016-11-16 09:25:05 +0100]",
 			out: time.Time{},
-			off: 26,
+			off: 27,
 			err: errors.New("failed to parse datetime: parsing time \"2016-11-16 09:25:05 +0100\" as \"02/Jan/2006:15:04:05 -0700\": cannot parse \"16-11-16 09:25:05 +0100\" as \"/\""),
 		},
 	}

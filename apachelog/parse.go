@@ -199,7 +199,7 @@ func readDateTime(line string, pos int, quoted bool) (d time.Time, off int, err 
 		return
 	}
 	if !quoted {
-		off = idx
+		off = idx + 1
 	}
 	if d, err = time.Parse(StandardEnglishFormat, input[1:idx]); err != nil {
 		err = errors.New("failed to parse datetime: " + err.Error())
