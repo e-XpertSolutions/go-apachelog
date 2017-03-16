@@ -40,7 +40,7 @@ func makeStateFn(expr []string) (stateFn, error) {
 	var quoted bool
 	if strings.HasPrefix(formatStr, "\"") {
 		quoted = true
-		strings.Trim(formatStr, "\"")
+		formatStr = strings.Trim(formatStr, "\"")
 	}
 
 	// Recursive call to determine the next state function.
@@ -53,6 +53,20 @@ func makeStateFn(expr []string) (stateFn, error) {
 	switch f := LookupFormat(formatStr); f {
 	case REMOTE_HOST:
 		return parseRemoteHost(quoted, next), nil
+	case REMOTE_LOGNAME:
+		return parseRemoteLogname(quoted, next), nil
+	case REMOTE_USER:
+		return parseRemoteUser(quoted, next), nil
+	case TIME:
+		return parseTime(quoted, next), nil
+	case REQUEST_FIRST_LINE:
+		return parseRequestFirstLine(quoted, next), nil
+	case STATUS:
+		return parseStatus(quoted, next), nil
+	case RESPONSE_SIZE:
+		return parseResponseSize(quoted, next), nil
+	case RESPONSE_SIZE_CLF:
+		return parseResponseSizeCLF(quoted, next), nil
 	case UNKNOWN:
 		fallthrough
 	default:
@@ -122,6 +136,150 @@ func parseRemoteHost(quoted bool, next stateFn) stateFn {
 			return err
 		}
 		entry.RemoteHost = data
+		newPos := pos + off
+		if line[newPos] == ' ' {
+			newPos++ // jump over next space, if any
+		}
+		if line[newPos] == '\n' || next == nil {
+			// If we reached the final \n character or that there is no further
+			// state, we do not call the next function.
+			return nil
+		}
+		return next(entry, line, newPos)
+	}
+}
+
+func parseRemoteLogname(quoted bool, next stateFn) stateFn {
+	return func(entry *AccessLogEntry, line string, pos int) error {
+		data, off, err := readString(line, pos, quoted)
+		if err != nil {
+			return err
+		}
+		entry.RemoteLogname = data
+		newPos := pos + off
+		if line[newPos] == ' ' {
+			newPos++ // jump over next space, if any
+		}
+		if line[newPos] == '\n' || next == nil {
+			// If we reached the final \n character or that there is no further
+			// state, we do not call the next function.
+			return nil
+		}
+		return next(entry, line, newPos)
+	}
+}
+
+func parseRemoteUser(quoted bool, next stateFn) stateFn {
+	return func(entry *AccessLogEntry, line string, pos int) error {
+		data, off, err := readString(line, pos, quoted)
+		if err != nil {
+			return err
+		}
+		entry.RemoteUser = data
+		newPos := pos + off
+		if line[newPos] == ' ' {
+			newPos++ // jump over next space, if any
+		}
+		if line[newPos] == '\n' || next == nil {
+			// If we reached the final \n character or that there is no further
+			// state, we do not call the next function.
+			return nil
+		}
+		return next(entry, line, newPos)
+	}
+}
+
+func parseTime(quoted bool, next stateFn) stateFn {
+	return func(entry *AccessLogEntry, line string, pos int) error {
+		data, off, err := readDateTime(line, pos, quoted)
+		if err != nil {
+			return err
+		}
+		entry.Time = data
+		newPos := pos + off
+		if line[newPos] == ' ' {
+			newPos++ // jump over next space, if any
+		}
+		if line[newPos] == '\n' || next == nil {
+			// If we reached the final \n character or that there is no further
+			// state, we do not call the next function.
+			return nil
+		}
+		return next(entry, line, newPos)
+	}
+}
+
+func parseRequestFirstLine(quoted bool, next stateFn) stateFn {
+	return func(entry *AccessLogEntry, line string, pos int) error {
+		data, off, err := readString(line, pos, quoted)
+		if err != nil {
+			return err
+		}
+		entry.RequestFirstLine = data
+		newPos := pos + off
+		if line[newPos] == ' ' {
+			newPos++ // jump over next space, if any
+		}
+		if line[newPos] == '\n' || next == nil {
+			// If we reached the final \n character or that there is no further
+			// state, we do not call the next function.
+			return nil
+		}
+		return next(entry, line, newPos)
+	}
+}
+
+func parseStatus(quoted bool, next stateFn) stateFn {
+	return func(entry *AccessLogEntry, line string, pos int) error {
+		data, off, err := readString(line, pos, quoted)
+		if err != nil {
+			return err
+		}
+		entry.Status = data
+		newPos := pos + off
+		if line[newPos] == ' ' {
+			newPos++ // jump over next space, if any
+		}
+		if line[newPos] == '\n' || next == nil {
+			// If we reached the final \n character or that there is no further
+			// state, we do not call the next function.
+			return nil
+		}
+		return next(entry, line, newPos)
+	}
+}
+
+func parseResponseSize(quoted bool, next stateFn) stateFn {
+	return func(entry *AccessLogEntry, line string, pos int) error {
+		data, off, err := readInt(line, pos, quoted)
+		if err != nil {
+			return err
+		}
+		entry.ResponseSize = data
+		newPos := pos + off
+		if line[newPos] == ' ' {
+			newPos++ // jump over next space, if any
+		}
+		if line[newPos] == '\n' || next == nil {
+			// If we reached the final \n character or that there is no further
+			// state, we do not call the next function.
+			return nil
+		}
+		return next(entry, line, newPos)
+	}
+}
+
+func parseResponseSizeCLF(quoted bool, next stateFn) stateFn {
+	return func(entry *AccessLogEntry, line string, pos int) error {
+		data, off, err := readString(line, pos, quoted)
+		if err != nil {
+			return err
+		}
+		if data != "-" {
+			if entry.ResponseSize, err = strconv.ParseInt(data, 10, 64); err != nil {
+				return errors.New("malformed response size: " + err.Error())
+			}
+		}
 		newPos := pos + off
 		if line[newPos] == ' ' {
 			newPos++ // jump over next space, if any
