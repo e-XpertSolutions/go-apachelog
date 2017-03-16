@@ -17,11 +17,11 @@ type AccessLogEntry struct {
 	RemoteLogname       string            // Remote logname. A "-" is returned, when not supplied
 	RequestMethod       string            // Request method
 	Port                string            // Canonical port of the server serving the request
-	ProcessID           int               // Process ID of the child that serviced the request
+	ProcessID           int64             // Process ID of the child that serviced the request
 	QueryString         string            // Query string (prepended with a ? if exists)
 	Status              string            // Status
 	Time                time.Time         // Time the request was received (standard english format)
-	ElapsedTimeSec      int               // Time taken to serve the request, in seconds
+	ElapsedTimeSec      int64             // Time taken to serve the request, in seconds
 	RemoteUser          string            // Remote user (from auth)
 	URLPath             string            // URL path requested, not including any query string
 	CanonicalServerName string            // Canonical ServerName of the server serving the request
