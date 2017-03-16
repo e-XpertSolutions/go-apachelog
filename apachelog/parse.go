@@ -117,139 +117,112 @@ func (p *Parser) Parse() (*AccessLogEntry, error) {
 
 func parseRemoteHost(quoted bool, next stateFn) stateFn {
 	return func(entry *AccessLogEntry, line string, pos int) error {
-		input := line[pos:] // narrow the input to the current position
-		newPos := pos
-
-		// handle quotes
-		var (
-			data string
-			off  int
-			err  error
-		)
-		if quoted {
-			data, off, err = readWithQuotes(input)
-			off++ // go after the "
-		} else {
-			data, off, err = readWithoutQuotes(input)
-		}
+		data, off, err := readString(line, pos, quoted)
 		if err != nil {
 			return err
 		}
-		newPos += off
 		entry.RemoteHost = data
-
-		// jump over next space, if any
+		newPos := pos + off
 		if line[newPos] == ' ' {
-			newPos++
+			newPos++ // jump over next space, if any
 		}
-
-		// If we reached the final \n character or that there is no further
-		// state, we do not call the next function.
 		if line[newPos] == '\n' || next == nil {
+			// If we reached the final \n character or that there is no further
+			// state, we do not call the next function.
 			return nil
 		}
-
 		return next(entry, line, newPos)
 	}
 }
 
-func parseRemoteLogname(quoted bool, next stateFn) stateFn {
-	return func(entry *AccessLogEntry, line string, pos int) error {
-		input := line[pos:] // narrow the input to the current position
-		newPos := pos
-
-		// handle quotes
-		var (
-			data string
-			off  int
-			err  error
-		)
-		if quoted {
-			data, off, err = readWithQuotes(input)
-			off++ // go after the "
-		} else {
-			data, off, err = readWithoutQuotes(input)
-		}
-		if err != nil {
-			return err
-		}
-		newPos += off
-		entry.RemoteLogname = data
-
-		// jump over next space, if any
-		if line[newPos] == ' ' {
-			newPos++
-		}
-
-		// If we reached the final \n character or that there is no further
-		// state, we do not call the next function.
-		if line[newPos] == '\n' || next == nil {
-			return nil
-		}
-
-		return next(entry, line, newPos)
-	}
-}
-
-// readWithQuotes extract the content of a quoted expression along with the
+// extractFromQuotes extract the content of a quoted expression along with the
 // ending quote position.
 //
 // s is expected to be a non empty string starting with a " (double quote)
 // character. The closing double quote does not need to be at end of the string.
-func readWithQuotes(s string) (data string, pos int, err error) {
+func extractFromQuotes(s string) (data string, off int, err error) {
 	if s[0] != '"' {
 		err = fmt.Errorf("got %q, want quote", s[0])
 		return
 	}
-	pos++
-	if idx := strings.Index(s[pos:], "\""); idx == -1 {
+	if off = strings.Index(s[1:], "\""); off == -1 {
 		err = errors.New("missing closing quote")
 	} else {
-		pos += idx
+		off++ // since we are starting from position 1
+		data = s[1:off]
 	}
-	data = s[1:pos]
 	return
 }
 
-func readWithoutQuotes(s string) (data string, pos int, err error) {
-	if idx := strings.IndexAny(s, " \n"); idx == -1 {
-		// should never happen
-		err = errors.New("malformed input string")
+// readString reads the next string value from the given position of the line.
+//
+// It returns the string value as well as the offset between the initial
+// position and the next character following the string.
+func readString(line string, pos int, quoted bool) (data string, off int, err error) {
+	input := line[pos:] // narrow the input to the current position
+	if quoted {
+		data, off, err = extractFromQuotes(input)
+		off++ // go after the "
 	} else {
-		pos += idx
-	}
-	data = s[:pos]
-	return
-}
-
-func readDateTime(s string) (d time.Time, pos int, err error) {
-	if s[0] != '[' {
-		err = fmt.Errorf("got %q, want '['", s[0])
-		return
-	}
-	pos++
-	if idx := strings.Index(s[pos:], "]"); idx == -1 {
-		err = errors.New("missing closing ']'")
-	} else {
-		pos += idx
-		if d, err = time.Parse(StandardEnglishFormat, s[1:pos]); err != nil {
-			err = errors.New("failed to parse datetime: " + err.Error())
+		if off = strings.IndexAny(input, " \n"); off == -1 {
+			// Should never happen since line is expected to have a trailing \n.
+			data = input
+			off = len(input)
+		} else {
+			data = input[:off]
 		}
 	}
 	return
 }
 
-func readInt(s string) (data int64, pos int, err error) {
-	if s[0] < '0' || s[0] > '9' {
-		err = fmt.Errorf("got %q, want digit between 0 and 9", s[0])
+// readDateTime reads and parse the next datetime value, surrounded by square
+// brackets ("[", "]"), from the given position of the line. The date is
+// expected to be formatted using the same layout as the one defined by the
+// StandardEnglishFormat constant.
+//
+// It returns the time.Time value as well as the offset between the initial
+// position and the next character following the date.
+func readDateTime(line string, pos int, quoted bool) (d time.Time, off int, err error) {
+	input := line[pos:] // narrow the input to the current position
+	if quoted {
+		if input, off, err = extractFromQuotes(input); err != nil {
+			return
+		}
+	}
+	if input[0] != '[' {
+		err = fmt.Errorf("got %q, want '['", input[0])
 		return
 	}
-	for pos = 1; pos < len(s); pos++ {
-		if s[pos] < '0' || s[pos] > '9' {
+	idx := strings.Index(input, "]")
+	if idx == -1 {
+		err = errors.New("missing closing ']'")
+		return
+	}
+	if !quoted {
+		off = idx
+	}
+	if d, err = time.Parse(StandardEnglishFormat, input[1:idx]); err != nil {
+		err = errors.New("failed to parse datetime: " + err.Error())
+	}
+	return
+}
+
+// readInt reads the next integer value from the given position of the line.
+//
+// It returns the 64 integer value as well as the offset between the initial
+// position and the next character following the integer.
+func readInt(line string, pos int, quoted bool) (data int64, off int, err error) {
+	input := line[pos:] // narrow the input to the current position
+	if input[0] < '0' || input[0] > '9' {
+		err = fmt.Errorf("got %q, want digit between 0 and 9", input[0])
+		return
+	}
+	for off = 1; off < len(input); off++ {
+		if input[off] < '0' || input[off] > '9' {
 			break
 		}
 	}
 	// error should not occur since only digit are kept
-	data, err = strconv.ParseInt(s[:pos], 10, 64)
+	data, err = strconv.ParseInt(input[:off], 10, 64)
 	return
 }
