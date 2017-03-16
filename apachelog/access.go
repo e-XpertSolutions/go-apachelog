@@ -4,8 +4,8 @@ import "time"
 
 // An AccessLogEntry represents a line of an access log.
 type AccessLogEntry struct {
-	RemoteIPAddress     string            // Remote IP address
-	LocalIPAddress      string            // Local IP address
+	RemoteIPAddr        string            // Remote IP address
+	LocalIPAddr         string            // Local IP address
 	ResponseSize        int64             // Size of response in bytes, excluding HTTP headers
 	Cookies             map[string]string // Cookies value
 	ElapsedTime         int64             // Time taken to serve the request, in microseconds
