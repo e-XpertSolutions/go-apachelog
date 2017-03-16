@@ -19,6 +19,7 @@ type AccessLogEntry struct {
 	Port                string            // Canonical port of the server serving the request
 	ProcessID           int64             // Process ID of the child that serviced the request
 	QueryString         string            // Query string (prepended with a ? if exists)
+	RequestFirstLine    string            // First line of the request
 	Status              string            // Status
 	Time                time.Time         // Time the request was received (standard english format)
 	ElapsedTimeSec      int64             // Time taken to serve the request, in seconds

@@ -26,6 +26,7 @@ const (
 	PORT                         // %p
 	PROCESS_ID                   // %P
 	QUERY_STRING                 // %q
+	REQUEST_FIRST_LINE           // %r
 	STATUS                       // %s
 	TIME                         // %t
 	REMOTE_USER                  // %u
@@ -55,6 +56,7 @@ var formats = [...]string{
 	PORT:                  "%p",
 	PROCESS_ID:            "%P",
 	QUERY_STRING:          "%q",
+	REQUEST_FIRST_LINE:    "%r",
 	STATUS:                "%s",
 	TIME:                  "%t",
 	REMOTE_USER:           "%u",
