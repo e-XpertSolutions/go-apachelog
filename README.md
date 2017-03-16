@@ -7,6 +7,12 @@
 **IMPORTANT:** This project is in active development and is not yet ready for production.
 
 
+## Contributing
+
+Contributions are greatly appreciated. The project follows the typical
+[GitHub pull request model](https://help.github.com/articles/using-pull-requests/)
+for contribution.
+
 ## License
 
 The sources are release under a BSD 3-Clause License. The full terms of that
