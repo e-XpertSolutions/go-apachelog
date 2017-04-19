@@ -2,7 +2,7 @@
 
 [![GoDoc](https://godoc.org/github.com/e-XpertSolutions/go-apachelog/apachelog?status.png)](http://godoc.org/github.com/e-XpertSolutions/go-apachelog/apachelog)
 [![License](https://img.shields.io/badge/license-BSD%203--Clause-yellow.svg?style=flat)](https://github.com/e-XpertSolutions/go-apachelog/blob/master/LICENSE)
-[![Travis](https://travis-ci.org/e-XpertSolutions/go-apachelog.svg?branch=master)](https://travis-ci.org/e-XpertSolutions/go-apachelog.svg)
+[![Travis](https://travis-ci.org/e-XpertSolutions/go-apachelog.svg?branch=master)](https://travis-ci.org/e-XpertSolutions/go-apachelog)
 
 **IMPORTANT:** This project is in active development and is not yet ready for production.
 
