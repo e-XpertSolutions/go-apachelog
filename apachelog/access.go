@@ -10,6 +10,7 @@ type AccessLogEntry struct {
 	Cookies             map[string]string // Cookies value
 	ElapsedTime         int64             // Time taken to serve the request, in microseconds
 	EnvVars             map[string]string // Content of the environment variables
+	Headers             map[string]string // Content of the request headers
 	Filename            string            // Filename
 	RemoteHost          string            // Remote host
 	RequestProto        string            // Request protocol

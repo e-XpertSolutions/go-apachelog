@@ -18,6 +18,7 @@ const (
 	COOKIE                       // %{Foobar}C
 	ELAPSED_TIME                 // %D
 	ENV_VAR                      // %{FOOBAR}e
+	HEADER                       // %{Foobar}i
 	FILENAME                     // %f
 	REMOTE_HOST                  // %h
 	REQUEST_PROTO                // %H
@@ -45,9 +46,10 @@ var formats = [...]string{
 	LOCAL_IP_ADDRESS:      "%A",
 	RESPONSE_SIZE:         "%B",
 	RESPONSE_SIZE_CLF:     "%b",
-	COOKIE:                "%{Foobar}C",
+	COOKIE:                "%{...}C",
 	ELAPSED_TIME:          "%D",
-	ENV_VAR:               "%{FOOBAR}e",
+	ENV_VAR:               "%{...}e",
+	HEADER:                "%{...}i",
 	FILENAME:              "%f",
 	REMOTE_HOST:           "%h",
 	REQUEST_PROTO:         "%H",
