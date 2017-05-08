@@ -67,6 +67,9 @@ func makeStateFn(expr []string) (stateFn, error) {
 		return parseResponseSize(quoted, next), nil
 	case RESPONSE_SIZE_CLF:
 		return parseResponseSizeCLF(quoted, next), nil
+	case HEADER:
+		hdr := strings.TrimSuffix(strings.TrimPrefix(formatStr, "%{"), "}i")
+		return parseHeader(quoted, hdr, next), nil
 	case UNKNOWN:
 		fallthrough
 	default:
@@ -122,7 +125,11 @@ func (p *Parser) Parse() (*AccessLogEntry, error) {
 	if err != nil {
 		return nil, err
 	}
-	var entry AccessLogEntry
+	entry := AccessLogEntry{
+		Cookies: make(map[string]string),
+		Headers: make(map[string]string),
+		EnvVars: make(map[string]string),
+	}
 	if err := p.fn(&entry, line, 0); err != nil {
 		return nil, err
 	}
@@ -280,6 +287,26 @@ func parseResponseSizeCLF(quoted bool, next stateFn) stateFn {
 				return errors.New("malformed response size: " + err.Error())
 			}
 		}
+		newPos := pos + off
+		if line[newPos] == ' ' {
+			newPos++ // jump over next space, if any
+		}
+		if line[newPos] == '\n' || next == nil {
+			// If we reached the final \n character or that there is no further
+			// state, we do not call the next function.
+			return nil
+		}
+		return next(entry, line, newPos)
+	}
+}
+
+func parseHeader(quoted bool, hdr string, next stateFn) stateFn {
+	return func(entry *AccessLogEntry, line string, pos int) error {
+		data, off, err := readString(line, pos, quoted)
+		if err != nil {
+			return err
+		}
+		entry.Headers[hdr] = data
 		newPos := pos + off
 		if line[newPos] == ' ' {
 			newPos++ // jump over next space, if any
