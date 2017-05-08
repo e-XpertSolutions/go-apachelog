@@ -1,5 +1,9 @@
 package apachelog
 
+import (
+	"strings"
+)
+
 // Format supported by the Apache mod_log_config module.
 // For more information, see:
 //    https://httpd.apache.org/docs/2.2/fr/mod/mod_log_config.html#formats
@@ -88,6 +92,11 @@ func init() {
 
 // LookupFormat retrieves the format corresponding to the given format string.
 func LookupFormat(format string) Format {
+	if strings.HasPrefix(format, "%{") {
+		if idx := strings.Index(format, "}"); idx != -1 {
+			format = "%{..." + format[idx:]
+		}
+	}
 	if f, found := formatsMapping[format]; found {
 		return f
 	}
