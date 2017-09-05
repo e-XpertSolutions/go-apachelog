@@ -1,6 +1,9 @@
 package apachelog
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 // An AccessLogEntry represents a line of an access log.
 type AccessLogEntry struct {
@@ -20,7 +23,7 @@ type AccessLogEntry struct {
 	Port                string            // Canonical port of the server serving the request
 	ProcessID           int64             // Process ID of the child that serviced the request
 	QueryString         string            // Query string (prepended with a ? if exists)
-	RequestFirstLine    string            // First line of the request
+	RequestFirstLine    RequestFirstLine  // First line of the request
 	Status              string            // Status
 	Time                time.Time         // Time the request was received (standard english format)
 	ElapsedTimeSec      int64             // Time taken to serve the request, in seconds
@@ -30,4 +33,67 @@ type AccessLogEntry struct {
 	ServerName          string            // Server name according to the UseCanonicalName setting
 	BytesReceived       int64             // Bytes received, including request and headers
 	BytesSent           int64             // Bytes sent, including headers
+}
+
+// RequestFirstLine is a handy structure to hold the first line of the HTTP
+// request. It provides accessors to access the HTTP method, the path and the
+// protocol information contained in the raw first line.
+type RequestFirstLine struct {
+	raw string
+
+	// Extracted fields
+	method string
+	path   string
+	proto  string
+
+	parsed bool
+}
+
+// NewRequestFirstLine creates a new RequestFirstLine with the supplied raw
+// first line.
+//
+// This function does not parse or do anything else than initializing the
+// structure.
+func NewRequestFirstLine(raw string) RequestFirstLine {
+	return RequestFirstLine{
+		raw: raw,
+	}
+}
+
+// Method returns the method held in the HTTP request first line.
+func (rfl *RequestFirstLine) Method() string {
+	rfl.parse()
+	return rfl.method
+}
+
+// Path returns the path held in the HTTP request first line.
+func (rfl *RequestFirstLine) Path() string {
+	rfl.parse()
+	return rfl.path
+}
+
+// Protocol returns the protocol held in the HTTP request first line.
+func (rfl *RequestFirstLine) Protocol() string {
+	rfl.parse()
+	return rfl.proto
+}
+
+func (rfl *RequestFirstLine) parse() {
+	if rfl.parsed || rfl.raw == "" {
+		return
+	}
+
+	s := strings.Split(rfl.raw, " ")
+	if len(s) != 3 {
+		return
+	}
+	rfl.method = s[0]
+	rfl.path = s[1]
+	rfl.proto = s[2]
+
+	rfl.parsed = true
+}
+
+func (rfl RequestFirstLine) String() string {
+	return rfl.raw
 }

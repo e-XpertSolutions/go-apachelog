@@ -1,8 +1,10 @@
 package apachelog
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 )
@@ -46,6 +48,40 @@ func TestMakeStateFn(t *testing.T) {
 				test.expr, test.err.Error(), err.Error())
 		}
 	}
+}
+
+func TestCommonParser(t *testing.T) {
+	logLine := `127.0.0.1 - - [12/Dec/2016:10:57:30 +0100] "GET /assets/img/logo.jpg HTTP/1.1" 200 50122`
+
+	t.Log("input = ", logLine)
+
+	p, err := CommonParser(strings.NewReader(logLine + "\n"))
+	if err != nil {
+		t.Fatalf("CommonParser(...): unexpected error %q", err.Error())
+	}
+	entry, err := p.Parse()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// TODO(gilliek): test result
+	t.Logf("%#v", entry)
+}
+
+func TestCombinedParser(t *testing.T) {
+	logLine := `127.0.0.1 - frank [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326 "http://www.example.com/start.html" "Mozilla/4.08 [en] (Win98; I ;Nav)"`
+
+	t.Log("input = ", logLine)
+
+	p, err := CombinedParser(strings.NewReader(logLine + "\n"))
+	if err != nil {
+		t.Fatalf("Combined(...): unexpected error %q", err.Error())
+	}
+	entry, err := p.Parse()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// TODO(gilliek): test result
+	t.Logf("%#v", entry)
 }
 
 func TestParseRemoteHost(t *testing.T) {
@@ -254,6 +290,23 @@ func TestReadInt(t *testing.T) {
 		case err != nil && test.err != nil && err.Error() != test.err.Error():
 			t.Errorf("%d. readInt(%q): expected error %q; got %q",
 				i, test.in, test.err.Error(), err.Error())
+		}
+	}
+}
+
+func BenchmarkCommonParser(b *testing.B) {
+	for k := 0; k < b.N; k++ {
+		b.StopTimer()
+		logLine := `127.0.0.1 - - [12/Dec/2016:10:57:30 +0100] "GET /assets/img/logo.jpg HTTP/1.1" 200 50122`
+		buf := bytes.NewBufferString(logLine)
+		buf.WriteString("\n")
+		p, err := CommonParser(buf)
+		if err != nil {
+			b.Fatalf("CommonParser(...): unexpected error %q", err.Error())
+		}
+		b.StartTimer()
+		if _, err = p.Parse(); err != nil {
+			b.Fatal(err)
 		}
 	}
 }

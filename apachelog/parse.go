@@ -222,7 +222,7 @@ func parseRequestFirstLine(quoted bool, next stateFn) stateFn {
 		if err != nil {
 			return err
 		}
-		entry.RequestFirstLine = data
+		entry.RequestFirstLine = NewRequestFirstLine(data)
 		newPos := pos + off
 		if line[newPos] == ' ' {
 			newPos++ // jump over next space, if any
