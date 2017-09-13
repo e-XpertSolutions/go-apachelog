@@ -1,6 +1,7 @@
 package apachelog
 
 import (
+	"net/url"
 	"strings"
 	"time"
 )
@@ -42,11 +43,13 @@ type RequestFirstLine struct {
 	raw string
 
 	// Extracted fields
-	method string
-	path   string
-	proto  string
+	method     string
+	path       string
+	pathParsed string
+	proto      string
 
-	parsed bool
+	parsedPath bool
+	parsed     bool
 }
 
 // NewRequestFirstLine creates a new RequestFirstLine with the supplied raw
@@ -66,10 +69,27 @@ func (rfl *RequestFirstLine) Method() string {
 	return rfl.method
 }
 
-// Path returns the path held in the HTTP request first line.
-func (rfl *RequestFirstLine) Path() string {
+// RawPath returns the raw path held in the HTTP request first line.
+func (rfl *RequestFirstLine) RawPath() string {
 	rfl.parse()
 	return rfl.path
+}
+
+// Path returns the parsed path (without url "percent encoding") held in the HTTP request first line.
+func (rfl *RequestFirstLine) Path() string {
+	rfl.parse()
+	if rfl.parsedPath {
+		return rfl.pathParsed
+	}
+
+	parsed, err := url.PathUnescape(rfl.path)
+	if err != nil {
+		rfl.pathParsed = rfl.path
+	} else {
+		rfl.pathParsed = parsed
+	}
+	rfl.parsedPath = true
+	return rfl.pathParsed
 }
 
 // Protocol returns the protocol held in the HTTP request first line.
