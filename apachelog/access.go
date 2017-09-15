@@ -43,13 +43,17 @@ type RequestFirstLine struct {
 	raw string
 
 	// Extracted fields
-	method     string
-	path       string
-	pathParsed string
-	proto      string
+	method      string
+	path        string
+	pathParsed  string
+	proto       string
+	url         url.URL
+	queryValues url.Values
 
-	parsedPath bool
-	parsed     bool
+	parsedQueryValues bool
+	parsedURL         bool
+	parsedPath        bool
+	parsed            bool
 }
 
 // NewRequestFirstLine creates a new RequestFirstLine with the supplied raw
@@ -90,6 +94,38 @@ func (rfl *RequestFirstLine) Path() string {
 	}
 	rfl.parsedPath = true
 	return rfl.pathParsed
+}
+
+// URL returns url.URL structure derived from the raw path
+func (rfl *RequestFirstLine) URL() url.URL {
+
+	if rfl.parsedURL {
+		return rfl.url
+	}
+
+	urlParsed, err := url.ParseRequestURI(rfl.RawPath())
+	if err != nil {
+		rfl.url = url.URL{RawPath: rfl.RawPath()}
+	} else {
+		rfl.url = *urlParsed
+	}
+	rfl.parsedURL = true
+
+	return rfl.url
+}
+
+// QueryValues returns query values (url.Values) derived from URL.RawQuery
+func (rfl *RequestFirstLine) QueryValues() url.Values {
+
+	if rfl.parsedQueryValues {
+		return rfl.queryValues
+	}
+
+	query := rfl.URL().RawQuery
+	val, _ := url.ParseQuery(query)
+	rfl.queryValues = val
+	rfl.parsedQueryValues = true
+	return rfl.queryValues
 }
 
 // Protocol returns the protocol held in the HTTP request first line.
