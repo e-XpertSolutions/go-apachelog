@@ -67,6 +67,8 @@ func makeStateFn(expr []string) (stateFn, error) {
 		return parseResponseSize(quoted, next), nil
 	case RESPONSE_SIZE_CLF:
 		return parseResponseSizeCLF(quoted, next), nil
+	case ELAPSED_TIME_IN_SEC:
+		return parseElapsedTimeInSec(quoted, next), nil
 	case HEADER:
 		hdr := strings.TrimSuffix(strings.TrimPrefix(formatStr, "%{"), "}i")
 		return parseHeader(quoted, hdr, next), nil
@@ -287,6 +289,26 @@ func parseResponseSizeCLF(quoted bool, next stateFn) stateFn {
 				return errors.New("malformed response size: " + err.Error())
 			}
 		}
+		newPos := pos + off
+		if line[newPos] == ' ' {
+			newPos++ // jump over next space, if any
+		}
+		if line[newPos] == '\n' || next == nil {
+			// If we reached the final \n character or that there is no further
+			// state, we do not call the next function.
+			return nil
+		}
+		return next(entry, line, newPos)
+	}
+}
+
+func parseElapsedTimeInSec(quoted bool, next stateFn) stateFn {
+	return func(entry *AccessLogEntry, line string, pos int) error {
+		data, off, err := readInt(line, pos, quoted)
+		if err != nil {
+			return err
+		}
+		entry.ElapsedTimeSec = data
 		newPos := pos + off
 		if line[newPos] == ' ' {
 			newPos++ // jump over next space, if any
