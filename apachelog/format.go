@@ -6,7 +6,7 @@ import (
 
 // Format supported by the Apache mod_log_config module.
 // For more information, see:
-//    https://httpd.apache.org/docs/2.2/fr/mod/mod_log_config.html#formats
+//    https://httpd.apache.org/docs/2.4/en/mod/mod_log_config.html#formats
 type Format int
 
 // Supported formats.
@@ -40,6 +40,7 @@ const (
 	SERVER_NAME                  // %V
 	BYTES_RECEIVED               // %I
 	BYTES_SENT                   // %O
+	ELAPSED_TIME_IN_SEC          // %T
 	format_end
 
 	UNKNOWN // for errors
@@ -71,6 +72,7 @@ var formats = [...]string{
 	SERVER_NAME:           "%V",
 	BYTES_RECEIVED:        "%I",
 	BYTES_SENT:            "%O",
+	ELAPSED_TIME_IN_SEC:   "%T",
 	UNKNOWN:               "UNKNOWN",
 }
 
