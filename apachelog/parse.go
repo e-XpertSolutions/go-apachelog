@@ -102,7 +102,7 @@ func CommonParser(r io.Reader) (*Parser, error) {
 //
 // The format is mostly the same as the one defined by the mod_log_config Apache
 // module:
-//    https://httpd.apache.org/docs/2.2/fr/mod/mod_log_config.html#formats
+//    https://httpd.apache.org/docs/2.4/en/mod/mod_log_config.html#formats
 //
 // However, unlike the Apache format, it does not support modifiers of any
 // kind (<, >, !, ...).
