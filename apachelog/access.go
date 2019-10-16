@@ -153,3 +153,12 @@ func (rfl *RequestFirstLine) parse() {
 func (rfl RequestFirstLine) String() string {
 	return rfl.raw
 }
+
+func (rfl RequestFirstLine) GobEncode() ([]byte, error) {
+	return []byte(rfl.raw), nil
+}
+
+func (rfl *RequestFirstLine) GobDecode(b []byte) error {
+	*rfl = NewRequestFirstLine(string(b))
+	return nil
+}
